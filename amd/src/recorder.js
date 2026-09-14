@@ -1,0 +1,278 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Browser video recorder for mod_videoanswer.
+ *
+ * @module     mod_videoanswer/recorder
+ * @package   mod_videoanswer
+ * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+define(['jquery', 'core/str'], function($, Str) {
+    const getSupportedMimeType = () => {
+        const types = [
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm',
+            'video/mp4',
+        ];
+        for (const type of types) {
+            if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+        return '';
+    };
+
+    const init = async(config) => {
+        const root = $('[data-region="videoanswer"]')[0];
+        if (!root) {
+            return;
+        }
+
+        const live = root.querySelector('[data-region="live"]');
+        const preview = root.querySelector('[data-region="preview"]');
+        const status = root.querySelector('[data-region="status"]');
+        const timer = root.querySelector('[data-region="timer"]');
+        const message = root.querySelector('[data-region="message"]');
+        const replaceWarning = root.querySelector('[data-region="replace-warning"]');
+        const recordButton = root.querySelector('[data-action="record"]');
+        const stopButton = root.querySelector('[data-action="stop"]');
+        const retakeButton = root.querySelector('[data-action="retake"]');
+        const submitButton = root.querySelector('[data-action="submit"]');
+
+        if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            status.textContent = await Str.get_string('unsupportedbrowser', 'videoanswer');
+            recordButton.disabled = true;
+            return;
+        }
+
+        let stream = null;
+        let recorder = null;
+        let chunks = [];
+        let blob = null;
+        let startedAt = 0;
+        let duration = 0;
+        let ticker = null;
+        let autoStop = null;
+
+        const showMessage = (text, type) => {
+            message.textContent = text;
+            message.className = 'alert mt-3 alert-' + type;
+        };
+
+        const clearMessage = () => {
+            message.textContent = '';
+            message.className = 'alert mt-3 d-none';
+        };
+
+        const stopTracks = () => {
+            if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+                stream = null;
+            }
+            live.srcObject = null;
+        };
+
+        const updateTimer = async() => {
+            const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+            const remaining = Math.max(0, config.timelimit - elapsed);
+            timer.textContent = remaining + 's';
+            status.textContent = await Str.get_string('remaining', 'videoanswer', remaining);
+        };
+
+        const prepareStream = async() => {
+            clearMessage();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {facingMode: 'user', width: {ideal: 1280}, height: {ideal: 720}},
+                    audio: true,
+                });
+                live.srcObject = stream;
+                await live.play();
+                return true;
+            } catch (error) {
+                const key = error && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')
+                    ? 'permissiondenied' : 'recordingerror';
+                showMessage(await Str.get_string(key, 'videoanswer'), 'danger');
+                return false;
+            }
+        };
+
+        const finishRecordingUi = async() => {
+            clearInterval(ticker);
+            clearTimeout(autoStop);
+            ticker = null;
+            autoStop = null;
+            duration = Math.max(1, Date.now() - startedAt);
+            stopTracks();
+
+            const mimeType = recorder && recorder.mimeType ? recorder.mimeType : getSupportedMimeType();
+            blob = new Blob(chunks, {type: mimeType || 'video/webm'});
+            chunks = [];
+
+            if (blob.size > config.maxbytes) {
+                showMessage(await Str.get_string('toobig', 'videoanswer'), 'danger');
+                blob = null;
+                recordButton.classList.remove('d-none');
+                stopButton.classList.add('d-none');
+                retakeButton.classList.add('d-none');
+                submitButton.classList.add('d-none');
+                return;
+            }
+
+            preview.src = URL.createObjectURL(blob);
+            preview.classList.remove('d-none');
+            live.classList.add('d-none');
+            recordButton.classList.add('d-none');
+            stopButton.classList.add('d-none');
+            retakeButton.classList.remove('d-none');
+            submitButton.classList.remove('d-none');
+            timer.textContent = (duration / 1000).toFixed(1) + 's';
+            status.textContent = await Str.get_string('preview', 'videoanswer');
+            if (config.hasprevious) {
+                replaceWarning.classList.remove('d-none');
+            }
+        };
+
+        recordButton.addEventListener('click', async() => {
+            clearMessage();
+            if (!await prepareStream()) {
+                return;
+            }
+
+            preview.classList.add('d-none');
+            live.classList.remove('d-none');
+            retakeButton.classList.add('d-none');
+            submitButton.classList.add('d-none');
+            replaceWarning.classList.add('d-none');
+
+            chunks = [];
+            const mimeType = getSupportedMimeType();
+            try {
+                recorder = mimeType ? new MediaRecorder(stream, {mimeType: mimeType}) : new MediaRecorder(stream);
+            } catch (error) {
+                stopTracks();
+                showMessage(await Str.get_string('recordingerror', 'videoanswer'), 'danger');
+                return;
+            }
+
+            recorder.addEventListener('dataavailable', (event) => {
+                if (event.data && event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            });
+            recorder.addEventListener('stop', finishRecordingUi, {once: true});
+
+            startedAt = Date.now();
+            recorder.start(1000);
+            recordButton.classList.add('d-none');
+            stopButton.classList.remove('d-none');
+            status.textContent = await Str.get_string('recording', 'videoanswer');
+            timer.textContent = config.timelimit + 's';
+            ticker = setInterval(updateTimer, 500);
+            autoStop = setTimeout(() => {
+                if (recorder && recorder.state === 'recording') {
+                    recorder.stop();
+                }
+            }, config.timelimit * 1000);
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (recorder && recorder.state === 'recording') {
+                recorder.stop();
+            }
+        });
+
+        retakeButton.addEventListener('click', async() => {
+            if (preview.src) {
+                URL.revokeObjectURL(preview.src);
+                preview.removeAttribute('src');
+                preview.load();
+            }
+            blob = null;
+            duration = 0;
+            preview.classList.add('d-none');
+            live.classList.remove('d-none');
+            retakeButton.classList.add('d-none');
+            submitButton.classList.add('d-none');
+            replaceWarning.classList.add('d-none');
+            recordButton.classList.remove('d-none');
+            timer.textContent = config.timelimit + 's';
+            status.textContent = await Str.get_string('ready', 'videoanswer');
+        });
+
+        submitButton.addEventListener('click', async() => {
+            if (!blob || duration <= 0) {
+                return;
+            }
+
+            clearMessage();
+            submitButton.disabled = true;
+            retakeButton.disabled = true;
+            status.textContent = await Str.get_string('uploading', 'videoanswer');
+
+            const formData = new FormData();
+            formData.append('cmid', String(config.cmid));
+            formData.append('duration', String(duration));
+            formData.append('sesskey', config.sesskey);
+            const extension = blob.type.indexOf('mp4') !== -1 ? 'mp4' : 'webm';
+            formData.append('video', blob, 'answer.' + extension);
+
+            try {
+                const response = await fetch(config.uploadurl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: formData,
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || await Str.get_string('uploaderror', 'videoanswer'));
+                }
+
+                showMessage(result.message, 'success');
+                status.textContent = result.message;
+                config.hasprevious = true;
+                replaceWarning.classList.add('d-none');
+                if (!config.allowretake) {
+                    retakeButton.classList.add('d-none');
+                    submitButton.classList.add('d-none');
+                }
+                if (result.url) {
+                    const existing = root.querySelector('[data-region="existing-submission"] video');
+                    if (existing) {
+                        existing.src = result.url;
+                        existing.load();
+                    }
+                    const date = root.querySelector('[data-region="submission-date"]');
+                    if (date && result.submittedat) {
+                        date.textContent = result.submittedat;
+                    }
+                }
+            } catch (error) {
+                showMessage(error.message || await Str.get_string('uploaderror', 'videoanswer'), 'danger');
+                status.textContent = await Str.get_string('uploaderror', 'videoanswer');
+            } finally {
+                submitButton.disabled = false;
+                retakeButton.disabled = false;
+            }
+        });
+
+        window.addEventListener('beforeunload', stopTracks);
+    };
+
+    return {init: init};
+});
