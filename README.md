@@ -1,25 +1,23 @@
 # mod_videoanswer
 
-Moodle activity for very short video responses recorded directly with the learner's webcam or phone camera.
+Video Answer é uma atividade Moodle para respostas curtas em vídeo gravadas diretamente com a câmera do computador ou
+do celular do estudante.
 
-## Main features
+## Como funciona
 
-- Teacher writes a prompt such as “Explain this concept in up to 60 seconds”.
-- Recording limits: 30, 60, or 120 seconds.
-- Browser recording through `getUserMedia` + `MediaRecorder`.
-- Preview before submission.
-- Optional re-recording/replacement after submission.
-- One current submission per learner.
-- Teacher report with learner, duration, submission time, and inline video playback.
-- Moodle File API storage with capability checks and authenticated `pluginfile.php` delivery.
-- Privacy API implementation.
+O professor escreve uma pergunta ou proposta, por exemplo “Explique este conceito em até 60 segundos”, e define o limite
+de gravação. O estudante grava no próprio navegador, assiste ao resultado antes de enviar e, quando permitido, pode
+substituir a gravação por uma nova tentativa.
 
-## Requirements
+A atividade mantém uma submissão atual por estudante e armazena o vídeo pela File API do Moodle, com entrega autenticada
+e verificação de permissões.
 
-- Moodle 4.5 or newer.
-- HTTPS is required by modern browsers for camera/microphone access, except on localhost.
-- A browser with `MediaRecorder` support.
+## Recursos
 
-## Installation
-
-Install the folder as `mod/videoanswer` or upload the ZIP through Moodle plugin installation.
+- limites de gravação de 30, 60 ou 120 segundos;
+- captura de câmera e microfone diretamente no navegador;
+- pré-visualização antes do envio;
+- opção de regravar ou substituir a resposta;
+- relatório com estudante, duração, horário de envio e reprodução do vídeo;
+- armazenamento protegido pela File API;
+- integração com a Privacy API do Moodle.
