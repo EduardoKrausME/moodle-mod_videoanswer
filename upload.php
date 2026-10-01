@@ -21,6 +21,9 @@
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use mod_videoanswer\submission_service;
+
 define('AJAX_SCRIPT', true);
 require_once('../../config.php');
 
@@ -43,14 +46,14 @@ try {
         throw new moodle_exception('uploaderror', 'videoanswer');
     }
 
-    $submission = \mod_videoanswer\submission_service::save(
+    $submission = submission_service::save(
         $activity,
         $context,
         (int)$USER->id,
         $_FILES['video'],
         $duration
     );
-    $url = \mod_videoanswer\submission_service::get_file_url($context, $submission);
+    $url = submission_service::get_file_url($context, $submission);
 
     echo json_encode([
         'success' => true,

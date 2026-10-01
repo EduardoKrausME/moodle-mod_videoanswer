@@ -21,7 +21,10 @@
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace mod_videoanswer;
+
+use context_module;
 
 /**
  * Class activity.
@@ -74,7 +77,7 @@ class activity {
 
         $cm = get_coursemodule_from_instance('videoanswer', $id, $activity->course, false, IGNORE_MISSING);
         if ($cm) {
-            $context = \context_module::instance($cm->id);
+            $context = context_module::instance($cm->id);
             get_file_storage()->delete_area_files($context->id, 'mod_videoanswer', 'submission');
         }
 

@@ -21,7 +21,7 @@
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/str'], function($, Str) {
+define(['jquery', 'core/str'], function ($, Str) {
     const getSupportedMimeType = () => {
         const types = [
             'video/webm;codecs=vp9,opus',
@@ -37,7 +37,7 @@ define(['jquery', 'core/str'], function($, Str) {
         return '';
     };
 
-    const init = async(config) => {
+    const init = async (config) => {
         const root = $('[data-region="videoanswer"]')[0];
         if (!root) {
             return;
@@ -87,14 +87,14 @@ define(['jquery', 'core/str'], function($, Str) {
             live.srcObject = null;
         };
 
-        const updateTimer = async() => {
+        const updateTimer = async () => {
             const elapsed = Math.floor((Date.now() - startedAt) / 1000);
             const remaining = Math.max(0, config.timelimit - elapsed);
             timer.textContent = remaining + 's';
             status.textContent = await Str.get_string('remaining', 'videoanswer', remaining);
         };
 
-        const prepareStream = async() => {
+        const prepareStream = async () => {
             clearMessage();
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
@@ -112,7 +112,7 @@ define(['jquery', 'core/str'], function($, Str) {
             }
         };
 
-        const finishRecordingUi = async() => {
+        const finishRecordingUi = async () => {
             clearInterval(ticker);
             clearTimeout(autoStop);
             ticker = null;
@@ -148,7 +148,7 @@ define(['jquery', 'core/str'], function($, Str) {
             }
         };
 
-        recordButton.addEventListener('click', async() => {
+        recordButton.addEventListener('click', async () => {
             clearMessage();
             if (!await prepareStream()) {
                 return;
@@ -197,7 +197,7 @@ define(['jquery', 'core/str'], function($, Str) {
             }
         });
 
-        retakeButton.addEventListener('click', async() => {
+        retakeButton.addEventListener('click', async () => {
             if (preview.src) {
                 URL.revokeObjectURL(preview.src);
                 preview.removeAttribute('src');
@@ -215,7 +215,7 @@ define(['jquery', 'core/str'], function($, Str) {
             status.textContent = await Str.get_string('ready', 'videoanswer');
         });
 
-        submitButton.addEventListener('click', async() => {
+        submitButton.addEventListener('click', async () => {
             if (!blob || duration <= 0) {
                 return;
             }

@@ -21,8 +21,10 @@
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace mod_videoanswer\privacy;
 
+use context;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\contextlist;
@@ -120,10 +122,10 @@ class provider implements
     /**
      * Method delete_data_for_all_users_in_context.
      *
-     * @param \context $context Parameter context.
+     * @param context $context Parameter context.
      * @return void Return value.
      */
-    public static function delete_data_for_all_users_in_context(\context $context): void {
+    public static function delete_data_for_all_users_in_context(context $context): void {
         global $DB;
 
         if ($context->contextlevel !== CONTEXT_MODULE) {

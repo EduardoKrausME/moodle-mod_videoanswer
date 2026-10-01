@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_videoanswer\submission_service;
+
 require_once('../../config.php');
 
 $id = required_param('id', PARAM_INT);
@@ -41,9 +43,9 @@ $PAGE->set_context($context);
 $submission = null;
 $submissionurl = null;
 if (has_capability('mod/videoanswer:submit', $context)) {
-    $submission = \mod_videoanswer\submission_service::get_for_user((int)$activity->id, (int)$USER->id);
+    $submission = submission_service::get_for_user((int)$activity->id, (int)$USER->id);
     if ($submission) {
-        $submissionurl = \mod_videoanswer\submission_service::get_file_url($context, $submission);
+        $submissionurl = submission_service::get_file_url($context, $submission);
     }
 }
 
@@ -59,7 +61,7 @@ if (has_capability('mod/videoanswer:submit', $context) && (!$submission || !empt
         'timelimit' => (int)$activity->timelimit,
         'hasprevious' => !empty($submission),
         'allowretake' => !empty($activity->allowretake),
-        'maxbytes' => \mod_videoanswer\submission_service::MAX_FILE_SIZE,
+        'maxbytes' => submission_service::MAX_FILE_SIZE,
         'uploadurl' => (new moodle_url('/mod/videoanswer/upload.php'))->out(false),
         'sesskey' => sesskey(),
     ]]);

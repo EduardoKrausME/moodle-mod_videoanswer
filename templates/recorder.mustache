@@ -27,7 +27,8 @@
         <div class="card mb-3" data-region="existing-submission">
             <div class="card-body">
                 <h5 class="card-title">{{#str}}submission, videoanswer{{/str}}</h5>
-                <video controls preload="metadata" src="{{submissionurl}}" style="width:100%;max-width:640px;border-radius:.75rem;background:#111"></video>
+                <video controls preload="metadata" src="{{submissionurl}}"
+                       style="width:100%;max-width:640px;border-radius:.75rem;background:#111"></video>
                 <div class="small text-muted mt-2" data-region="submission-date">{{submissiondate}}</div>
             </div>
         </div>
@@ -41,17 +42,24 @@
                     <span class="badge bg-secondary" data-region="timer">{{timelimit}}s</span>
                 </div>
 
-                <video data-region="live" autoplay muted playsinline style="width:100%;max-width:640px;aspect-ratio:16/9;object-fit:cover;border-radius:.75rem;background:#111"></video>
-                <video data-region="preview" controls playsinline class="d-none" style="width:100%;max-width:640px;aspect-ratio:16/9;object-fit:contain;border-radius:.75rem;background:#111"></video>
+                <video data-region="live" autoplay muted playsinline
+                       style="width:100%;max-width:640px;aspect-ratio:16/9;object-fit:cover;border-radius:.75rem;background:#111"></video>
+                <video data-region="preview" controls playsinline class="d-none"
+                       style="width:100%;max-width:640px;aspect-ratio:16/9;object-fit:contain;border-radius:.75rem;background:#111"></video>
 
                 <div class="mt-3 d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn btn-primary" data-action="record">{{#str}}record, videoanswer{{/str}}</button>
-                    <button type="button" class="btn btn-danger d-none" data-action="stop">{{#str}}stop, videoanswer{{/str}}</button>
-                    <button type="button" class="btn btn-secondary d-none" data-action="retake">{{#str}}retake, videoanswer{{/str}}</button>
-                    <button type="button" class="btn btn-success d-none" data-action="submit">{{#str}}submitvideo, videoanswer{{/str}}</button>
+                    <button type="button" class="btn btn-primary" data-action="record">{{#str}}
+                        record, videoanswer{{/str}}</button>
+                    <button type="button" class="btn btn-danger d-none" data-action="stop">{{#str}}
+                        stop, videoanswer{{/str}}</button>
+                    <button type="button" class="btn btn-secondary d-none" data-action="retake">{{#str}}
+                        retake, videoanswer{{/str}}</button>
+                    <button type="button" class="btn btn-success d-none" data-action="submit">{{#str}}
+                        submitvideo, videoanswer{{/str}}</button>
                 </div>
 
-                <div class="alert alert-warning mt-3 d-none" data-region="replace-warning">{{#str}}replacewarning, videoanswer{{/str}}</div>
+                <div class="alert alert-warning mt-3 d-none" data-region="replace-warning">{{#str}}
+                    replacewarning, videoanswer{{/str}}</div>
                 <div class="alert mt-3 d-none" data-region="message"></div>
             </div>
         </div>

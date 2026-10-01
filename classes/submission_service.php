@@ -21,7 +21,13 @@
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace mod_videoanswer;
+
+use context_module;
+use moodle_exception;
+use moodle_url;
+use stored_file;
 
 /**
  * Class submission_service.
@@ -53,20 +59,20 @@ class submission_service {
      * Method save.
      *
      * @param object $activity Parameter activity.
-     * @param \context_module $context Parameter context.
+     * @param context_module $context Parameter context.
      * @param int $userid Parameter userid.
      * @param array $upload Parameter upload.
      * @param int $duration Parameter duration.
      * @return object Return value.
      */
-    public static function save(object $activity, \context_module $context, int $userid, array $upload, int $duration): object {
+    public static function save(object $activity, context_module $context, int $userid, array $upload, int $duration): object {
         global $DB;
 
         self::validate_upload($activity, $upload, $duration);
 
         $existing = self::get_for_user((int)$activity->id, $userid);
         if ($existing && empty($activity->allowretake)) {
-            throw new \moodle_exception('alreadyanswered', 'videoanswer');
+            throw new moodle_exception('alreadyanswered', 'videoanswer');
         }
 
         $now = time();
@@ -113,11 +119,11 @@ class submission_service {
     /**
      * Method get_file.
      *
-     * @param \context_module $context Parameter context.
+     * @param context_module $context Parameter context.
      * @param int $submissionid Parameter submissionid.
-     * @return ?\stored_file Return value.
+     * @return ?stored_file Return value.
      */
-    public static function get_file(\context_module $context, int $submissionid): ?\stored_file {
+    public static function get_file(context_module $context, int $submissionid): ?stored_file {
         $files = get_file_storage()->get_area_files(
             $context->id,
             'mod_videoanswer',
@@ -135,16 +141,16 @@ class submission_service {
     /**
      * Method get_file_url.
      *
-     * @param \context_module $context Parameter context.
+     * @param context_module $context Parameter context.
      * @param object $submission Parameter submission.
-     * @return ?\moodle_url Return value.
+     * @return ?moodle_url Return value.
      */
-    public static function get_file_url(\context_module $context, object $submission): ?\moodle_url {
+    public static function get_file_url(context_module $context, object $submission): ?moodle_url {
         $file = self::get_file($context, (int)$submission->id);
         if (!$file) {
             return null;
         }
-        return \moodle_url::make_pluginfile_url(
+        return moodle_url::make_pluginfile_url(
             $context->id,
             'mod_videoanswer',
             'submission',
@@ -165,26 +171,26 @@ class submission_service {
      */
     private static function validate_upload(object $activity, array $upload, int $duration): void {
         if (empty($upload['tmp_name']) || !is_uploaded_file($upload['tmp_name'])) {
-            throw new \moodle_exception('uploaderror', 'videoanswer');
+            throw new moodle_exception('uploaderror', 'videoanswer');
         }
 
         if (!empty($upload['error'])) {
-            throw new \moodle_exception('uploaderror', 'videoanswer');
+            throw new moodle_exception('uploaderror', 'videoanswer');
         }
 
         $size = (int)($upload['size'] ?? 0);
         if ($size <= 0 || $size > self::MAX_FILE_SIZE) {
-            throw new \moodle_exception('toobig', 'videoanswer');
+            throw new moodle_exception('toobig', 'videoanswer');
         }
 
         $maxduration = ((int)$activity->timelimit * 1000) + self::DURATION_TOLERANCE_MS;
         if ($duration <= 0 || $duration > $maxduration) {
-            throw new \moodle_exception('invalidduration', 'videoanswer');
+            throw new moodle_exception('invalidduration', 'videoanswer');
         }
 
         $mimetype = self::normalise_mimetype((string)($upload['type'] ?? ''));
         if (!in_array($mimetype, ['video/webm', 'video/mp4', 'video/quicktime'], true)) {
-            throw new \moodle_exception('invalidmimetype', 'videoanswer');
+            throw new moodle_exception('invalidmimetype', 'videoanswer');
         }
     }
 

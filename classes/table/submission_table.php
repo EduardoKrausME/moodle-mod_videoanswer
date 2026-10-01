@@ -21,22 +21,29 @@
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace mod_videoanswer\table;
 
-defined('MOODLE_INTERNAL') || die();
+use context_module;
+use html_writer;
+use mod_videoanswer\submission_service;
+use moodle_url;
+use table_sql;
+
+defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->libdir . '/tablelib.php');
 
 /**
  * Class submission_table.
  */
-class submission_table extends \table_sql {
+class submission_table extends table_sql {
     /**
      * Property context.
      *
-     * @var \context_module
+     * @var context_module
      */
-    private \context_module $context;
+    private context_module $context;
     /**
      * Property courseid.
      *
@@ -48,11 +55,11 @@ class submission_table extends \table_sql {
      * Method __construct.
      *
      * @param string $uniqueid Parameter uniqueid.
-     * @param \context_module $context Parameter context.
+     * @param context_module $context Parameter context.
      * @param int $courseid Parameter courseid.
      * @param int $videoanswerid Parameter videoanswerid.
      */
-    public function __construct(string $uniqueid, \context_module $context, int $courseid, int $videoanswerid) {
+    public function __construct(string $uniqueid, context_module $context, int $courseid, int $videoanswerid) {
         parent::__construct($uniqueid);
 
         $this->context = $context;
@@ -86,11 +93,11 @@ class submission_table extends \table_sql {
      * @return string Return value.
      */
     public function col_student($row): string {
-        $url = new \moodle_url('/user/view.php', [
+        $url = new moodle_url('/user/view.php', [
             'id' => $row->userid,
             'course' => $this->courseid,
         ]);
-        return \html_writer::link($url, fullname($row));
+        return html_writer::link($url, fullname($row));
     }
 
     /**
@@ -120,11 +127,11 @@ class submission_table extends \table_sql {
      * @return string Return value.
      */
     public function col_video($row): string {
-        $url = \mod_videoanswer\submission_service::get_file_url($this->context, $row);
+        $url = submission_service::get_file_url($this->context, $row);
         if (!$url) {
             return '-';
         }
-        return \html_writer::tag('video', '', [
+        return html_writer::tag('video', '', [
             'controls' => 'controls',
             'preload' => 'metadata',
             'playsinline' => 'playsinline',

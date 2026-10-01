@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_videoanswer\activity;
 use mod_videoanswer\file_service;
 
 /**
@@ -50,7 +51,7 @@ function videoanswer_supports(string $feature) {
  * @return int
  */
 function videoanswer_add_instance($data, $mform = null): int {
-    return \mod_videoanswer\activity::create($data);
+    return activity::create($data);
 }
 
 /**
@@ -61,7 +62,7 @@ function videoanswer_add_instance($data, $mform = null): int {
  * @return bool
  */
 function videoanswer_update_instance($data, $mform = null): bool {
-    return \mod_videoanswer\activity::update($data);
+    return activity::update($data);
 }
 
 /**
@@ -71,7 +72,7 @@ function videoanswer_update_instance($data, $mform = null): bool {
  * @return bool
  */
 function videoanswer_delete_instance(int $id): bool {
-    return \mod_videoanswer\activity::delete($id);
+    return activity::delete($id);
 }
 
 /**

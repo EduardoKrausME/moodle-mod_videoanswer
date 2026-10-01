@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_videoanswer\table\submission_table;
+
 require_once('../../config.php');
 
 $id = required_param('id', PARAM_INT);
@@ -44,7 +46,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('reports', 'videoanswer'));
 echo $OUTPUT->heading(format_string($activity->name), 3);
 
-$table = new \mod_videoanswer\table\submission_table(
+$table = new submission_table(
     'mod-videoanswer-submissions-' . $cm->id,
     $context,
     (int)$course->id,
