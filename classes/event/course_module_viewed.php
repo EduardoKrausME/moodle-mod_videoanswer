@@ -15,45 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Short video answer activity.
+ * Course module viewed event.
  *
  * @package    mod_videoanswer
  * @copyright  2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_videoanswer\event;
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/videoanswer/backup/moodle2/backup_videoanswer_stepslib.php');
-
 /**
- * Class backup_videoanswer_activity_task.
+ * Event triggered when a Short video answer activity is viewed.
  */
-class backup_videoanswer_activity_task extends backup_activity_task {
+class course_module_viewed extends \core\event\course_module_viewed {
     /**
-     * Method define_my_settings.
+     * Initialise event data.
      *
-     * @return void Return value.
+     * @return void
      */
-    protected function define_my_settings(): void {
+    protected function init() {
+        $this->data['objecttable'] = 'videoanswer';
+        $this->data['crud'] = 'r';
+        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
     }
 
     /**
-     * Method define_my_steps.
+     * Map object ID for backup and restore.
      *
-     * @return void Return value.
+     * @return array
      */
-    protected function define_my_steps(): void {
-        $this->add_step(new backup_videoanswer_activity_structure_step('videoanswer_structure', 'videoanswer.xml'));
-    }
-
-    /**
-     * Method encode_content_links.
-     *
-     * @param mixed $content Parameter content.
-     * @return string Return value.
-     */
-    public static function encode_content_links($content): string {
-        return $content;
+    public static function get_objectid_mapping() {
+        return ['db' => 'videoanswer', 'restore' => 'videoanswer'];
     }
 }

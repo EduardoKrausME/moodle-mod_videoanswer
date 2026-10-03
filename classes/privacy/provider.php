@@ -27,8 +27,10 @@ namespace mod_videoanswer\privacy;
 use context;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\transform;
+use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 /**
@@ -36,7 +38,8 @@ use core_privacy\local\request\writer;
  */
 class provider implements
     \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider {
+    \core_privacy\local\request\plugin\provider,
+    \core_privacy\local\request\core_userlist_provider {
 
     /**
      * Method get_metadata.
@@ -78,6 +81,29 @@ class provider implements
         $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, $params);
         return $contextlist;
+    }
+
+    /**
+     * Get users who have submission data in the supplied activity context.
+     *
+     * @param userlist $userlist User list for a context.
+     * @return void
+     */
+    public static function get_users_in_context(userlist $userlist): void {
+        $context = $userlist->get_context();
+        if ($context->contextlevel !== CONTEXT_MODULE) {
+            return;
+        }
+
+        $cm = get_coursemodule_from_id('videoanswer', $context->instanceid, 0, false, IGNORE_MISSING);
+        if (!$cm) {
+            return;
+        }
+
+        $sql = "SELECT userid
+                  FROM {videoanswer_submissions}
+                 WHERE videoanswerid = :videoanswerid";
+        $userlist->add_from_sql('userid', $sql, ['videoanswerid' => $cm->instance]);
     }
 
     /**
@@ -165,6 +191,45 @@ class provider implements
                 continue;
             }
             get_file_storage()->delete_area_files($context->id, 'mod_videoanswer', 'submission', $submission->id);
+            $DB->delete_records('videoanswer_submissions', ['id' => $submission->id]);
+        }
+    }
+
+    /**
+     * Delete submission data for the approved users in one activity context.
+     *
+     * @param approved_userlist $userlist Approved users for the context.
+     * @return void
+     */
+    public static function delete_data_for_users(approved_userlist $userlist): void {
+        global $DB;
+
+        $context = $userlist->get_context();
+        if ($context->contextlevel !== CONTEXT_MODULE) {
+            return;
+        }
+
+        $cm = get_coursemodule_from_id('videoanswer', $context->instanceid, 0, false, IGNORE_MISSING);
+        if (!$cm) {
+            return;
+        }
+
+        $userids = $userlist->get_userids();
+        if (!$userids) {
+            return;
+        }
+
+        [$usersql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'userid');
+        $params['videoanswerid'] = $cm->instance;
+        $submissions = $DB->get_records_select(
+            'videoanswer_submissions',
+            "videoanswerid = :videoanswerid AND userid {$usersql}",
+            $params
+        );
+
+        $fs = get_file_storage();
+        foreach ($submissions as $submission) {
+            $fs->delete_area_files($context->id, 'mod_videoanswer', 'submission', $submission->id);
             $DB->delete_records('videoanswer_submissions', ['id' => $submission->id]);
         }
     }
