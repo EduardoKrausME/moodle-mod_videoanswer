@@ -24,8 +24,6 @@
 
 namespace mod_videoanswer\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Event triggered when a Short video answer activity is viewed.
  */
