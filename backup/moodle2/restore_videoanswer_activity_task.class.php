@@ -31,37 +31,51 @@ require_once($CFG->dirroot . '/mod/videoanswer/backup/moodle2/restore_videoanswe
  */
 class restore_videoanswer_activity_task extends restore_activity_task {
     /**
-     * Method define_my_settings.
+     * Defines activity-specific settings.
      *
-     * @return void Return value.
+     * @return void
      */
-    protected function define_my_settings(): void {
+    protected function define_my_settings() {
     }
 
     /**
-     * Method define_my_steps.
+     * Defines activity-specific restore steps.
      *
-     * @return void Return value.
+     * @return void
      */
-    protected function define_my_steps(): void {
+    protected function define_my_steps() {
         $this->add_step(new restore_videoanswer_activity_structure_step('videoanswer_structure', 'videoanswer.xml'));
     }
 
     /**
-     * Method define_decode_contents.
+     * Defines content fields processed by the link decoder.
      *
-     * @return array Return value.
+     * @return restore_decode_content[]
      */
-    public static function define_decode_contents(): array {
-        return [];
+    public static function define_decode_contents() {
+        return [
+            new restore_decode_content('videoanswer', ['intro'], 'videoanswer'),
+        ];
     }
 
     /**
-     * Method define_decode_rules.
+     * Defines URL decoding rules for this activity.
      *
-     * @return array Return value.
+     * @return restore_decode_rule[]
      */
-    public static function define_decode_rules(): array {
+    public static function define_decode_rules() {
+        return [
+            new restore_decode_rule('VIDEOANSWERVIEWBYID', '/mod/videoanswer/view.php?id=$1', 'course_module'),
+            new restore_decode_rule('VIDEOANSWERINDEX', '/mod/videoanswer/index.php?id=$1', 'course'),
+        ];
+    }
+
+    /**
+     * Defines legacy log restore rules.
+     *
+     * @return restore_log_rule[]
+     */
+    public static function define_restore_log_rules() {
         return [];
     }
 }
